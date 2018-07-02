@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
+using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.LibraryModel;
 using NuGet.PackageManagement;
@@ -137,7 +138,7 @@ namespace NuGet.VisualStudio
                 var solutionProjectPath = EnvDTEProjectInfoUtility.GetFullProjectPath(solutionProject);
 
                 if (!string.IsNullOrEmpty(solutionProjectPath) &&
-                    solutionProjectPath.Equals(projectUniqueName))
+                    PathUtility.GetStringComparerBasedOnOS().Equals(solutionProjectPath, projectUniqueName))
                 {
                     // get the VSProjectAdapter instance which will be used to retrieve MSBuild properties
                     var projectApadter = await _vsProjectAdapterProvider.Value.CreateAdapterForFullyLoadedProjectAsync(solutionProject);
@@ -165,14 +166,14 @@ namespace NuGet.VisualStudio
                 // First check for project.assets.json file and generate VsPathContext from there.
                 if (!string.IsNullOrEmpty(projectAssetsFile))
                 {
-                    context = GetPathContextFromProjectLockFile(projectAssetsFile, CancellationToken.None);
+                    context = GetPathContextFromProjectLockFile(projectAssetsFile);
                 }
 
                 // if no project.assets.json file, then check for project.lock.json file.
-                context = context ?? GetPathContextForProjectJson(vsProjectAdapter, CancellationToken.None);
+                context = context ?? GetPathContextForProjectJson(vsProjectAdapter);
 
                 // if no project.lock.json file, then look for packages.config file.
-                context = context ?? await GetPathContextForPackagesConfigAsync(vsProjectAdapter, CancellationToken.None);
+                context = context ?? await GetPathContextForPackagesConfigAsync(vsProjectAdapter, token);
 
                 // Fallback to reading the path context from the solution's settings. Note that project level settings in
                 // VS are not currently supported.
@@ -189,7 +190,7 @@ namespace NuGet.VisualStudio
         }
 
         private IVsPathContext GetPathContextForProjectJson(
-            IVsProjectAdapter vsProjectAdapter, CancellationToken token)
+            IVsProjectAdapter vsProjectAdapter)
         {
             // generate project.lock.json file path from project file
             var projectFilePath = vsProjectAdapter.FullProjectPath;
@@ -215,7 +216,7 @@ namespace NuGet.VisualStudio
                 if (File.Exists(projectJsonPath))
                 {
                     var lockFilePath = Common.ProjectJsonPathUtilities.GetLockFilePath(projectJsonPath);
-                    return GetPathContextFromProjectLockFile(lockFilePath, CancellationToken.None);
+                    return GetPathContextFromProjectLockFile(lockFilePath);
                 }
             }
 
@@ -223,7 +224,7 @@ namespace NuGet.VisualStudio
         }
 
         private IVsPathContext GetPathContextFromProjectLockFile(
-            string lockFilePath, CancellationToken token)
+            string lockFilePath)
         {
             var lockFile = _getLockFileOrNull(lockFilePath);
             if ((lockFile?.PackageFolders?.Count ?? 0) == 0)
