@@ -8,6 +8,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using NuGet.VisualStudio;
+using IAsyncServiceProvider = Microsoft.VisualStudio.Shell.IAsyncServiceProvider;
 
 namespace NuGetVSExtension
 {
@@ -20,19 +21,18 @@ namespace NuGetVSExtension
         private readonly Lazy<IVsOutputWindow> _vsOutputWindow;
         private readonly Lazy<IVsUIShell> _vsUiShell;
 
-        public ShowErrorsCommand(IServiceProvider serviceProvider)
+        public ShowErrorsCommand(IAsyncServiceProvider asyncServiceProvider)
         {
-            if (serviceProvider == null)
+            if (asyncServiceProvider == null)
             {
-                throw new ArgumentNullException(nameof(serviceProvider));
+                throw new ArgumentNullException(nameof(asyncServiceProvider));
             }
             // get all services we need for display and activation of the NuGet output pane
             _vsOutputWindow = new Lazy<IVsOutputWindow>(() =>
             {
                 return NuGetUIThreadHelper.JoinableTaskFactory.Run(async () =>
-                {
-                    await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    return (IVsOutputWindow)serviceProvider.GetService(typeof(SVsOutputWindow));
+                { 
+                    return await asyncServiceProvider.GetServiceAsync<SVsOutputWindow, IVsOutputWindow>();
                 });
             });
 
@@ -40,8 +40,7 @@ namespace NuGetVSExtension
             {
                 return NuGetUIThreadHelper.JoinableTaskFactory.Run(async () =>
                 {
-                    await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    return (IVsUIShell)serviceProvider.GetService(typeof(SVsUIShell));
+                    return await asyncServiceProvider.GetServiceAsync<SVsUIShell, IVsUIShell>();
                 });
             });
         }

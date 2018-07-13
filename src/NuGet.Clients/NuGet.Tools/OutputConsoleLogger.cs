@@ -32,14 +32,19 @@ namespace NuGetVSExtension
 
         [ImportingConstructor]
         public OutputConsoleLogger(
-            [Import(typeof(SVsServiceProvider))]
-            IServiceProvider serviceProvider,
+            IOutputConsoleProvider consoleProvider,
+            Lazy<ErrorListTableDataSource> errorListDataSource)
+            : this(AsyncServiceProvider.GlobalProvider, consoleProvider, errorListDataSource)
+        { }
+
+        public OutputConsoleLogger(
+            IAsyncServiceProvider asyncServiceProvider,
             IOutputConsoleProvider consoleProvider,
             Lazy<ErrorListTableDataSource> errorListDataSource)
         {
-            if (serviceProvider == null)
+            if (asyncServiceProvider == null)
             {
-                throw new ArgumentNullException(nameof(serviceProvider));
+                throw new ArgumentNullException(nameof(asyncServiceProvider));
             }
 
             if (consoleProvider == null)
@@ -51,9 +56,7 @@ namespace NuGetVSExtension
 
             NuGetUIThreadHelper.JoinableTaskFactory.Run(async () =>
             {
-                await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                _dte = serviceProvider.GetDTE();
+                _dte = await asyncServiceProvider.GetDTEAsync();
 
                 OutputConsole = consoleProvider.CreatePackageManagerConsole();
             });

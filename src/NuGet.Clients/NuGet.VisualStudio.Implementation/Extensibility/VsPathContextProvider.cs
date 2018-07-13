@@ -42,17 +42,28 @@ namespace NuGet.VisualStudio
 
         [ImportingConstructor]
         public VsPathContextProvider(
-            [Import(typeof(SVsServiceProvider))]
-            IServiceProvider serviceProvider,
             Lazy<ISettings> settings,
             Lazy<IVsSolutionManager> solutionManager,
             [Import("VisualStudioActivityLogger")]
             Lazy<NuGet.Common.ILogger> logger,
             Lazy<IVsProjectAdapterProvider> vsProjectAdapterProvider)
+            : this(AsyncServiceProvider.GlobalProvider,
+                  settings,
+                  solutionManager,
+                  logger,
+                  vsProjectAdapterProvider)
+        { }
+
+        public VsPathContextProvider(
+            IAsyncServiceProvider asyncServiceProvider,
+            Lazy<ISettings> settings,
+            Lazy<IVsSolutionManager> solutionManager,
+            Lazy<NuGet.Common.ILogger> logger,
+            Lazy<IVsProjectAdapterProvider> vsProjectAdapterProvider)
         {
-            if (serviceProvider == null)
+            if (asyncServiceProvider == null)
             {
-                throw new ArgumentNullException(nameof(serviceProvider));
+                throw new ArgumentNullException(nameof(asyncServiceProvider));
             }
 
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -64,8 +75,7 @@ namespace NuGet.VisualStudio
             _dte = new AsyncLazy<EnvDTE.DTE>(
                 async () =>
                 {
-                    await NuGetUIThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    return serviceProvider.GetDTE();
+                    return await asyncServiceProvider.GetDTEAsync();
                 },
                 NuGetUIThreadHelper.JoinableTaskFactory);
         }
