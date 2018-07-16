@@ -92,11 +92,6 @@ namespace NuGet.Configuration
         }
 
         /// <summary>
-        /// Gets the <see cref="ISettings"/> that this source originated from. May be null.
-        /// </summary>
-        public ISettings Origin { get; set; }
-
-        /// <summary>
         /// Corresponding trusted source details. Null if the package source does not have trusted sources information.
         /// </summary>
         public TrustedSource TrustedSource { get; set; }

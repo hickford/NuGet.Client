@@ -40,7 +40,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -191,7 +192,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -234,7 +236,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -269,7 +272,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -299,7 +303,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -331,7 +336,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -369,7 +375,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -420,7 +427,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -444,7 +452,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
                 var trustedSource = new TrustedSource("nuget.org");
                 trustedSource.Certificates.Add(new CertificateTrustEntry("HASH", "SUBJECT_NAME", HashAlgorithmName.SHA256));
@@ -488,7 +497,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
                 var trustedSource = new TrustedSource("nuget.org");
                 trustedSource.Certificates.Add(new CertificateTrustEntry("HASH2", "SUBJECT_NAME2", HashAlgorithmName.SHA384));
@@ -532,7 +542,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
                 var trustedSource = new TrustedSource("nuget.org");
                 trustedSource.Certificates.Add(new CertificateTrustEntry("HASH", "SUBJECT_NAME", HashAlgorithmName.SHA384));
@@ -577,7 +588,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
                 var trustedSource = new TrustedSource("nuget.org");
                 trustedSource.Certificates.Add(new CertificateTrustEntry("HASH", "SUBJECT_NAME", HashAlgorithmName.SHA256));
@@ -622,7 +634,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
                 var trustedSource = new TrustedSource("nuget.org");
                 trustedSource.Certificates.Add(new CertificateTrustEntry("HASH", "SUBJECT_NAME", HashAlgorithmName.SHA256));
@@ -671,7 +684,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
 
@@ -705,7 +719,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -744,7 +759,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -784,7 +800,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -810,7 +827,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 var trustedSource1 = new TrustedSource("nuget.org");
@@ -850,7 +868,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 var trustedSource1 = new TrustedSource("nuget.org");
@@ -1199,7 +1218,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -1232,7 +1252,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
 
                 // Act
@@ -1275,7 +1296,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
                 var trustedSource = new TrustedSource("nuget.org");
                 trustedSource.Certificates.Add(new CertificateTrustEntry("HASH", "SUBJECT_NAME", HashAlgorithmName.SHA256, priority: 0));
@@ -1315,7 +1337,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                var settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
                 var trustedSourceProvider = new TrustedSourceProvider(settings);
                 var trustedSource = new TrustedSource("nuget.org");
                 trustedSource.Certificates.Add(new CertificateTrustEntry("HASH", "SUBJECT_NAME", HashAlgorithmName.SHA256));

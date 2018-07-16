@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -12,7 +12,7 @@ namespace NuGet.Configuration.Test
 {
     public class EnvironmentSupportTests
     {
-        private readonly string DefaultNuGetConfigurationWithEnvironmentVariable = @"
+        private readonly string _defaultNuGetConfigurationWithEnvironmentVariable = @"
 <configuration>
     <config>
         <add key='repositoryPath' value='%RP_ENV_VAR%' />
@@ -30,15 +30,16 @@ namespace NuGet.Configuration.Test
                 var nugetConfigFile = "NuGet.config";
                 var nugetConfigFilePath = Path.Combine(nugetConfigFileFolder, nugetConfigFile);
 
-                File.WriteAllText(nugetConfigFilePath, DefaultNuGetConfigurationWithEnvironmentVariable);
+                File.WriteAllText(nugetConfigFilePath, _defaultNuGetConfigurationWithEnvironmentVariable);
 
                 Environment.SetEnvironmentVariable("RP_ENV_VAR", "ONE");
 
                 //Act
-                ISettings settings = new Settings(nugetConfigFileFolder, nugetConfigFile);
+                var settingsFile = new SettingsFile(nugetConfigFileFolder, nugetConfigFile);
+                var settings = new Settings(settingsFile);
 
                 //Assert
-                Assert.Equal(settings.GetValue("config", "repositoryPath", isPath: true), Path.Combine(nugetConfigFileFolder, expectedRepositoryPath));
+                Assert.Equal(SettingsUtility.GetValueForAddElement(settings, "config", "repositoryPath", isPath: true), Path.Combine(nugetConfigFileFolder, expectedRepositoryPath));
             }
         }
 
@@ -53,17 +54,18 @@ namespace NuGet.Configuration.Test
                 var nugetConfigFile = "NuGet.config";
                 var nugetConfigFilePath = Path.Combine(nugetConfigFileFolder, nugetConfigFile);
 
-                File.WriteAllText(nugetConfigFilePath, DefaultNuGetConfigurationWithEnvironmentVariable);
+                File.WriteAllText(nugetConfigFilePath, _defaultNuGetConfigurationWithEnvironmentVariable);
 
                 Environment.SetEnvironmentVariable("RP_ENV_VAR", "ONE");
 
                 //Act
-                ISettings settings = new Settings(nugetConfigFileFolder, nugetConfigFile);
+                var settingsFile = new SettingsFile(nugetConfigFileFolder, nugetConfigFile);
+                var settings = new Settings(settingsFile);
 
                 //Assert
-                var settingsForConfig = settings.GetSettingValues("config", isPath: true);
+                var settingsForConfig = settings.Sections["config"]?.Children.Select(c => c as AddElement).Where(c => c != null);
                 Assert.Single(settingsForConfig);
-                Assert.Equal(settingsForConfig.Single().Value, Path.Combine(nugetConfigFileFolder, expectedRepositoryPath));
+                Assert.Equal(Settings.ResolveRelativePath(settingsForConfig.Single().Origin, settingsForConfig.Single().Value), Path.Combine(nugetConfigFileFolder, expectedRepositoryPath));
             }
         }
 
@@ -82,15 +84,16 @@ namespace NuGet.Configuration.Test
                 var nugetConfigFile = "NuGet.config";
                 var nugetConfigFilePath = Path.Combine(nugetConfigFileFolder, nugetConfigFile);
 
-                File.WriteAllText(nugetConfigFilePath, DefaultNuGetConfigurationWithEnvironmentVariable);
+                File.WriteAllText(nugetConfigFilePath, _defaultNuGetConfigurationWithEnvironmentVariable);
 
                 Environment.SetEnvironmentVariable("RP_ENV_VAR", expectedRepositoryPath);
 
                 //Act
-                ISettings settings = new Settings(nugetConfigFileFolder, nugetConfigFile);
+                var settingsFile = new SettingsFile(nugetConfigFileFolder, nugetConfigFile);
+                var settings = new Settings(settingsFile);
 
                 //Assert
-                Assert.Equal(expectedRepositoryPath, settings.GetValue("config", "repositoryPath", isPath: true));
+                Assert.Equal(expectedRepositoryPath, SettingsUtility.GetValueForAddElement(settings, "config", "repositoryPath", isPath: true));
             }
         }
 
@@ -109,17 +112,18 @@ namespace NuGet.Configuration.Test
                 var nugetConfigFile = "NuGet.config";
                 var nugetConfigFilePath = Path.Combine(nugetConfigFileFolder, nugetConfigFile);
 
-                File.WriteAllText(nugetConfigFilePath, DefaultNuGetConfigurationWithEnvironmentVariable);
+                File.WriteAllText(nugetConfigFilePath, _defaultNuGetConfigurationWithEnvironmentVariable);
 
                 Environment.SetEnvironmentVariable("RP_ENV_VAR", expectedRepositoryPath);
 
                 //Act
-                ISettings settings = new Settings(nugetConfigFileFolder, nugetConfigFile);
+                var settingsFile = new SettingsFile(nugetConfigFileFolder, nugetConfigFile);
+                var settings = new Settings(settingsFile);
 
                 //Assert
-                var settingsForConfig = settings.GetSettingValues("config", isPath: true);
+                var settingsForConfig = settings.Sections["config"]?.Children.Select(c => c as AddElement).Where(c => c != null);
                 Assert.Single(settingsForConfig);
-                Assert.Equal(expectedRepositoryPath, settingsForConfig.Single().Value);
+                Assert.Equal(expectedRepositoryPath, Settings.ResolveRelativePath(settingsForConfig.Single().Origin, settingsForConfig.Single().Value));
             }
         }
     }

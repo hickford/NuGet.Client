@@ -1,10 +1,9 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
-using NuGet.Configuration;
 using NuGet.ProjectManagement;
 
 namespace Test.Utility
@@ -14,9 +13,9 @@ namespace Test.Utility
         public HashSet<string> PendAddedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> PendDeletedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        public TestSourceControlManager() : base(NullSettings.Instance) { }
+        public TestSourceControlManager() : base(NuGet.Configuration.NullSettings.Instance) { }
 
-        public TestSourceControlManager(ISettings settings) : base(settings) { }
+        public TestSourceControlManager(NuGet.Configuration.ISettings settings) : base(settings) { }
 
         public override Stream CreateFile(string fullPath, INuGetProjectContext nuGetProjectContext)
         {

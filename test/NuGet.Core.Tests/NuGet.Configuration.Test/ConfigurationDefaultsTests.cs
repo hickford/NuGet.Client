@@ -200,10 +200,10 @@ namespace NuGet.Configuration
 </configuration>";
 
                 File.WriteAllText(Path.Combine(mockBaseDirectory, "NuGet.Config"), config);
-                var settings = Settings.LoadDefaultSettings(mockBaseDirectory,
+                var settings = Settings.LoadSettings(mockBaseDirectory,
                     configFileName: null,
                     machineWideSettings: null,
-                    loadAppDataSettings: false,
+                    loadUserWideSettings: false,
                     useTestingGlobalPath: false);
                 ConfigurationDefaults ConfigurationDefaults = GetConfigurationDefaults(configurationDefaultsContent, mockBaseDirectory);
 
@@ -239,10 +239,10 @@ namespace NuGet.Configuration
 </configuration>";
 
                 File.WriteAllText(Path.Combine(mockBaseDirectory, "NuGet.Config"), config);
-                var settings = Settings.LoadDefaultSettings(mockBaseDirectory,
+                var settings = Settings.LoadSettings(mockBaseDirectory,
                     configFileName: null,
                     machineWideSettings: null,
-                    loadAppDataSettings: false,
+                    loadUserWideSettings: false,
                     useTestingGlobalPath: false);
                 ConfigurationDefaults ConfigurationDefaults = GetConfigurationDefaults(configurationDefaultsContent, mockBaseDirectory);
 
@@ -277,10 +277,10 @@ namespace NuGet.Configuration
 </configuration>";
 
                 File.WriteAllText(Path.Combine(mockBaseDirectory, "NuGet.Config"), config);
-                var settings = Settings.LoadDefaultSettings(mockBaseDirectory,
+                var settings = Settings.LoadSettings(mockBaseDirectory,
                     configFileName: null,
                     machineWideSettings: null,
-                    loadAppDataSettings: false,
+                    loadUserWideSettings: false,
                     useTestingGlobalPath: false);
                 ConfigurationDefaults ConfigurationDefaults = GetConfigurationDefaults(configurationDefaultsContent, mockBaseDirectory);
 

@@ -39,7 +39,7 @@ namespace NuGet.CommandLine.Test
                     Path.GetFileName(configFile),
                     null);
 
-                var actualApiKey = SettingsUtility.GetDecryptedValue(settings, ConfigurationConstants.ApiKeys, NuGetConstants.DefaultGalleryServerUrl);
+                var actualApiKey = SettingsUtility.GetDecryptedValueForAddElement(settings, ConfigurationConstants.ApiKeys, NuGetConstants.DefaultGalleryServerUrl);
                 Assert.NotNull(actualApiKey);
                 Assert.Equal(testApiKey, actualApiKey);
             }

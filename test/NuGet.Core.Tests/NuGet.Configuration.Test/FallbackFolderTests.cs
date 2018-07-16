@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -37,7 +37,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                Settings settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
 
                 // Act
                 var paths = SettingsUtility.GetFallbackPackageFolders(settings);
@@ -66,7 +67,8 @@ namespace NuGet.Configuration.Test
 
 
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, subFolder, config);
-                Settings settings = new Settings(subFolder);
+                var settingsFile = new SettingsFile(subFolder);
+                var settings = new Settings(settingsFile);
 
                 // Act
                 var paths = SettingsUtility.GetFallbackPackageFolders(settings);
@@ -92,9 +94,9 @@ namespace NuGet.Configuration.Test
             {
                 var testFolder = Path.Combine(mockBaseDirectory, "test");
 
-
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                Settings settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
 
                 // Act
                 var paths = SettingsUtility.GetFallbackPackageFolders(settings);
@@ -121,7 +123,8 @@ namespace NuGet.Configuration.Test
             using (var mockBaseDirectory = TestDirectory.Create())
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
-                Settings settings = new Settings(mockBaseDirectory);
+                var settingsFile = new SettingsFile(mockBaseDirectory);
+                var settings = new Settings(settingsFile);
 
                 // Act
                 var paths = SettingsUtility.GetFallbackPackageFolders(settings).ToArray();
@@ -172,7 +175,8 @@ namespace NuGet.Configuration.Test
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, configB);
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, machineWide, configC);
 
-                var machineWiderFolderSettings = new Settings(machineWide);
+                var machineWiderFolderSettingsFile = new SettingsFile(machineWide);
+                var machineWiderFolderSettings = new Settings(machineWiderFolderSettingsFile);
                 var machineWideSettings = new TestMachineWideSettings(machineWiderFolderSettings);
 
                 var settings = Settings.LoadDefaultSettings(
@@ -232,7 +236,8 @@ namespace NuGet.Configuration.Test
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, configB);
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, machineWide, configC);
 
-                var machineWiderFolderSettings = new Settings(machineWide);
+                var machineWiderFolderSettingsFile = new SettingsFile(machineWide);
+                var machineWiderFolderSettings = new Settings(machineWiderFolderSettingsFile);
                 var machineWideSettings = new TestMachineWideSettings(machineWiderFolderSettings);
 
                 var settings = Settings.LoadDefaultSettings(

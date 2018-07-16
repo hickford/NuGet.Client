@@ -5,6 +5,14 @@ namespace NuGet.Configuration
 {
     public static class ConfigurationConstants
     {
+        public static readonly string[] ClearableSections = new[] {
+            "disabledPackageSources", "packageSources", "trustedSources", "packageSourceCredentials"
+        };
+
+        public static readonly string Add = "add";
+
+        public static readonly string Clear = "clear";
+
         public static readonly string ApiKeys = "apikeys";
 
         public static readonly string DisabledPackageSources = "disabledPackageSources";
@@ -56,5 +64,11 @@ namespace NuGet.Configuration
         public static readonly string FingerprintAlgorithm = "fingerprintAlgorithm";
 
         public static readonly string ServiceIndex = "serviceIndex";
+
+        public static readonly string Configuration = "configuration";
+
+        public static readonly string RepositoryPath = "repositoryPath";
+
+        public static readonly string GlobalPackagesFolder = "globalPackagesFolder";
     }
 }

@@ -11,7 +11,7 @@ namespace NuGet.Configuration
 {
     public class TrustedSourceProvider : ITrustedSourceProvider
     {
-        private ISettings _settings;
+        private readonly ISettings _settings;
 
         public TrustedSourceProvider(ISettings settings)
         {
@@ -21,19 +21,19 @@ namespace NuGet.Configuration
         public IEnumerable<TrustedSource> LoadTrustedSources()
         {
             var trustedSources = new List<TrustedSource>();
-            var trustedSourceNames = new HashSet<string>();
-            _settings.GetAllSubsections(ConfigurationConstants.TrustedSources)
-                .ForEach(s => trustedSourceNames.Add(s));
+            //var trustedSourceNames = new HashSet<string>();
+            //_settings.GetAllSubsections(ConfigurationConstants.TrustedSources)
+            //    .ForEach(s => trustedSourceNames.Add(s));
 
-            foreach (var trustedSourceName in trustedSourceNames)
-            {
-                var trustedSource = LoadTrustedSource(trustedSourceName);
+            //foreach (var trustedSourceName in trustedSourceNames)
+            //{
+            //    var trustedSource = LoadTrustedSource(trustedSourceName);
 
-                if (trustedSource != null)
-                {
-                    trustedSources.Add(trustedSource);
-                }
-            }
+            //    if (trustedSource != null)
+            //    {
+            //        trustedSources.Add(trustedSource);
+            //    }
+            //}
 
             return trustedSources;
         }
@@ -41,33 +41,33 @@ namespace NuGet.Configuration
         public TrustedSource LoadTrustedSource(string packageSourceName)
         {
             TrustedSource trustedSource = null;
-            var settingValues = _settings.GetNestedSettingValues(ConfigurationConstants.TrustedSources, packageSourceName);
+            //var settingValues = _settings.GetNestedSettingValues(ConfigurationConstants.TrustedSources, packageSourceName);
 
-            if (settingValues?.Count > 0)
-            {
-                trustedSource = new TrustedSource(packageSourceName);
-                foreach (var settingValue in settingValues)
-                {
-                    if (string.Equals(settingValue.Key, ConfigurationConstants.ServiceIndex, StringComparison.OrdinalIgnoreCase))
-                    {
-                        trustedSource.ServiceIndex = new ServiceIndexTrustEntry(settingValue.Value, settingValue.Priority);
-                    }
-                    else
-                    {
-                        var fingerprint = settingValue.Key;
-                        var subjectName = settingValue.Value;
-                        var algorithm = HashAlgorithmName.SHA256;
+            //if (settingValues?.Count > 0)
+            //{
+            //    trustedSource = new TrustedSource(packageSourceName);
+            //    foreach (var settingValue in settingValues)
+            //    {
+            //        if (string.Equals(settingValue.Key, ConfigurationConstants.ServiceIndex, StringComparison.OrdinalIgnoreCase))
+            //        {
+            //            trustedSource.ServiceIndex = new ServiceIndexTrustEntry(settingValue.Value, settingValue.Priority);
+            //        }
+            //        else
+            //        {
+            //            var fingerprint = settingValue.Key;
+            //            var subjectName = settingValue.Value;
+            //            var algorithm = HashAlgorithmName.SHA256;
 
-                        if (settingValue.AdditionalData.TryGetValue(ConfigurationConstants.FingerprintAlgorithm, out var algorithmString) &&
-                            CryptoHashUtility.GetHashAlgorithmName(algorithmString) != HashAlgorithmName.Unknown)
-                        {
-                            algorithm = CryptoHashUtility.GetHashAlgorithmName(algorithmString);
-                        }
+            //            if (settingValue.AdditionalData.TryGetValue(ConfigurationConstants.FingerprintAlgorithm, out var algorithmString) &&
+            //                CryptoHashUtility.GetHashAlgorithmName(algorithmString) != HashAlgorithmName.Unknown)
+            //            {
+            //                algorithm = CryptoHashUtility.GetHashAlgorithmName(algorithmString);
+            //            }
 
-                        trustedSource.Certificates.Add(new CertificateTrustEntry(fingerprint, subjectName, algorithm, settingValue.Priority));
-                    }
-                }
-            }
+            //            trustedSource.Certificates.Add(new CertificateTrustEntry(fingerprint, subjectName, algorithm, settingValue.Priority));
+            //        }
+            //    }
+            //}
 
             return trustedSource;
         }
@@ -89,47 +89,47 @@ namespace NuGet.Configuration
 
         private void SaveTrustedSource(TrustedSource source, IEnumerable<TrustedSource> existingSources)
         {
-            var matchingSource = existingSources
-                .Where(s => string.Equals(s.SourceName, source.SourceName, StringComparison.OrdinalIgnoreCase))
-                .FirstOrDefault();
+            //var matchingSource = existingSources
+            //    .Where(s => string.Equals(s.SourceName, source.SourceName, StringComparison.OrdinalIgnoreCase))
+            //    .FirstOrDefault();
 
-            var settingValues = new List<SettingValue>();
+            //var settingValues = new List<SettingValue>();
 
-            if (source.ServiceIndex != null)
-            {
-                // use existing priority if present
-                var priority = matchingSource?.ServiceIndex?.Priority ?? source.ServiceIndex.Priority ?? 0;
+            //if (source.ServiceIndex != null)
+            //{
+            //    // use existing priority if present
+            //    var priority = matchingSource?.ServiceIndex?.Priority ?? source.ServiceIndex.Priority ?? 0;
 
-                var settingValue = new SettingValue(ConfigurationConstants.ServiceIndex, source.ServiceIndex.Value, isMachineWide: false, priority: priority);
-                settingValues.Add(settingValue);
-            }
+            //    var settingValue = new SettingValue(ConfigurationConstants.ServiceIndex, source.ServiceIndex.Value, isMachineWide: false, priority: priority);
+            //    settingValues.Add(settingValue);
+            //}
 
-            foreach (var cert in source.Certificates)
-            {
-                // use existing priority if present
-                var priority = matchingSource?.Certificates.FirstOrDefault(c => c.Fingerprint == cert.Fingerprint)?.Priority ?? cert.Priority ?? 0;
+            //foreach (var cert in source.Certificates)
+            //{
+            //    // use existing priority if present
+            //    var priority = matchingSource?.Certificates.FirstOrDefault(c => c.Fingerprint == cert.Fingerprint)?.Priority ?? cert.Priority ?? 0;
 
-                // cant save to machine wide settings
-                var settingValue = new SettingValue(cert.Fingerprint, cert.SubjectName, isMachineWide: false, priority: priority);
+            //    // cant save to machine wide settings
+            //    var settingValue = new SettingValue(cert.Fingerprint, cert.SubjectName, isMachineWide: false, priority: priority);
 
-                settingValue.AdditionalData.Add(ConfigurationConstants.FingerprintAlgorithm, cert.FingerprintAlgorithm.ToString());
-                settingValues.Add(settingValue);
-            }
+            //    settingValue.AdditionalData.Add(ConfigurationConstants.FingerprintAlgorithm, cert.FingerprintAlgorithm.ToString());
+            //    settingValues.Add(settingValue);
+            //}
 
-            if (matchingSource != null)
-            {
-                _settings.UpdateSubsections(ConfigurationConstants.TrustedSources, source.SourceName, settingValues);
-            }
-            else
-            {
-                _settings.SetNestedSettingValues(ConfigurationConstants.TrustedSources, source.SourceName, settingValues);
-            }
+            //if (matchingSource != null)
+            //{
+            //    _settings.UpdateSubsections(ConfigurationConstants.TrustedSources, source.SourceName, settingValues);
+            //}
+            //else
+            //{
+            //    _settings.SetNestedSettingValues(ConfigurationConstants.TrustedSources, source.SourceName, settingValues);
+            //}
         }
 
         public void DeleteTrustedSource(string sourceName)
         {
             // Passing an empty list of values will clear the existing sections
-            _settings.UpdateSubsections(ConfigurationConstants.TrustedSources, sourceName, Enumerable.Empty<SettingValue>().AsList());
+            //_settings.UpdateSubsections(ConfigurationConstants.TrustedSources, sourceName, Enumerable.Empty<SettingValue>().AsList());
         }
     }
 }

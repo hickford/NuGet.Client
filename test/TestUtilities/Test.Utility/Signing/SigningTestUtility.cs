@@ -565,8 +565,8 @@ namespace Test.Utility.Signing
 
         private static bool AreCertificateHashAllowListEqual(IReadOnlyList<VerificationAllowListEntry> first, IReadOnlyList<VerificationAllowListEntry> second)
         {
-            return (first as IEnumerable<CertificateHashAllowListEntry>).
-                SequenceEqualWithNullCheck((second as IEnumerable<CertificateHashAllowListEntry>), new CertificateHashAllowListEntryComparer());
+            return (first as IEnumerable<CertificateHashAllowListEntry>)
+                .SequenceEqualWithNullCheck((second as IEnumerable<CertificateHashAllowListEntry>), new CertificateHashAllowListEntryComparer());
         }
 
         private class CertificateHashAllowListEntryComparer : IEqualityComparer<CertificateHashAllowListEntry>

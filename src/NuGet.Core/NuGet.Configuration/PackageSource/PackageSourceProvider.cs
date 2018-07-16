@@ -79,18 +79,17 @@ namespace NuGet.Configuration
         /// </summary>
         public IEnumerable<PackageSource> LoadPackageSources()
         {
-            var settingsValue = new List<SettingValue>();
-            var sourceSettingValues = Settings.GetSettingValues(ConfigurationConstants.PackageSources, isPath: true) ??
-                                      Enumerable.Empty<SettingValue>();
-
-            // Order the list so that they are ordered in priority order
-            var settingValues = sourceSettingValues.OrderByDescending(setting => setting.Priority);
+            var packageSourcesSection = Settings.Sections[ConfigurationConstants.PackageSources];
+            var sources = packageSourcesSection?.Children.Select(s => s as SourceElement)
+                .Where(s => s != null);
 
             // get list of disabled packages
-            var disabledSetting = Settings.GetSettingValues(ConfigurationConstants.DisabledPackageSources) ?? Enumerable.Empty<SettingValue>();
+            var disabledSourcesSection = Settings.Sections[ConfigurationConstants.DisabledPackageSources];
+            var disabledSourcesSettings = disabledSourcesSection?.Children.Select(s => s as AddElement)
+                .Where(s => s != null);
 
-            var disabledSources = new Dictionary<string, SettingValue>(StringComparer.OrdinalIgnoreCase);
-            foreach (var setting in disabledSetting)
+            var disabledSources = new Dictionary<string, AddElement>(StringComparer.OrdinalIgnoreCase);
+            foreach (var setting in disabledSourcesSettings)
             {
                 if (disabledSources.ContainsKey(setting.Key))
                 {
@@ -104,13 +103,12 @@ namespace NuGet.Configuration
 
             var packageSourceLookup = new Dictionary<string, IndexedPackageSource>(StringComparer.OrdinalIgnoreCase);
             var packageIndex = 0;
-            foreach (var setting in settingValues)
+            foreach (var setting in sources)
             {
                 var name = setting.Key;
 
                 var isEnabled = true;
-                SettingValue disabledSource;
-                if (disabledSources.TryGetValue(name, out disabledSource))
+                if (disabledSources.TryGetValue(name, out var disabledSource))
                 {
                     isEnabled = false;
                 }
@@ -162,12 +160,12 @@ namespace NuGet.Configuration
             loadedPackageSources.InsertRange(defaultSourcesInsertIndex, defaultPackageSourcesToBeAdded);
         }
 
-        private PackageSource ReadPackageSource(SettingValue setting, bool isEnabled)
+        private PackageSource ReadPackageSource(SourceElement setting, bool isEnabled)
         {
             var name = setting.Key;
             var packageSource = new PackageSource(setting.Value, name, isEnabled)
             {
-                IsMachineWide = setting.IsMachineWide
+                IsMachineWide = setting.Origin.IsMachineWide
             };
 
             var credentials = ReadCredential(name);
@@ -183,18 +181,13 @@ namespace NuGet.Configuration
             }
 
             packageSource.ProtocolVersion = ReadProtocolVersion(setting);
-            packageSource.Origin = setting.Origin;
 
             return packageSource;
         }
 
-        private static int ReadProtocolVersion(SettingValue setting)
+        private static int ReadProtocolVersion(SourceElement setting)
         {
-            string protocolVersionString;
-            int protocolVersion;
-            if (setting.AdditionalData.TryGetValue(ConfigurationConstants.ProtocolVersionAttribute, out protocolVersionString)
-                &&
-                int.TryParse(protocolVersionString, out protocolVersion))
+            if (int.TryParse(setting.ProtocolVersion, out var protocolVersion))
             {
                 return protocolVersion;
             }
@@ -207,8 +200,7 @@ namespace NuGet.Configuration
             int packageIndex,
             PackageSource packageSource)
         {
-            IndexedPackageSource previouslyAddedSource;
-            if (!packageSourceLookup.TryGetValue(packageSource.Name, out previouslyAddedSource))
+            if (!packageSourceLookup.TryGetValue(packageSource.Name, out var previouslyAddedSource))
             {
                 packageSourceLookup[packageSource.Name] = new IndexedPackageSource
                 {
@@ -241,21 +233,21 @@ namespace NuGet.Configuration
                 return environmentCredentials;
             }
 
-            var values = Settings.GetNestedValues(ConfigurationConstants.CredentialsSectionName, sourceName);
-            if (values != null
-                && values.Any())
+            var credentialsSection = Settings.Sections[ConfigurationConstants.CredentialsSectionName];
+            var sourceSubsection = credentialsSection.Children.Select(c => c as SettingSection).Where(s => s != null).FirstOrDefault(s => string.Equals(s.Name, sourceName, StringComparison.Ordinal));
+            if (sourceSubsection != null && sourceSubsection.Children != null && sourceSubsection.Children.Any())
             {
-                var userName = values.FirstOrDefault(k => k.Key.Equals(ConfigurationConstants.UsernameToken, StringComparison.OrdinalIgnoreCase)).Value;
+                var userName = (sourceSubsection.GetChildElement(ConfigurationConstants.KeyAttribute, ConfigurationConstants.UsernameToken) as AddElement)?.Value;
 
                 if (!string.IsNullOrEmpty(userName))
                 {
-                    var encryptedPassword = values.FirstOrDefault(k => k.Key.Equals(ConfigurationConstants.PasswordToken, StringComparison.OrdinalIgnoreCase)).Value;
+                    var encryptedPassword = (sourceSubsection.GetChildElement(ConfigurationConstants.KeyAttribute, ConfigurationConstants.PasswordToken) as AddElement)?.Value;
                     if (!string.IsNullOrEmpty(encryptedPassword))
                     {
                         return new PackageSourceCredential(sourceName, userName, encryptedPassword, isPasswordClearText: false);
                     }
 
-                    var clearTextPassword = values.FirstOrDefault(k => k.Key.Equals(ConfigurationConstants.ClearTextPasswordToken, StringComparison.Ordinal)).Value;
+                    var clearTextPassword = (sourceSubsection.GetChildElement(ConfigurationConstants.KeyAttribute, ConfigurationConstants.ClearTextPasswordToken) as AddElement)?.Value;
                     if (!string.IsNullOrEmpty(clearTextPassword))
                     {
                         return new PackageSourceCredential(sourceName, userName, clearTextPassword, isPasswordClearText: true);
@@ -330,133 +322,112 @@ namespace NuGet.Configuration
             // and write the new ones
             var sourcesToWrite = sources.Where(s => !s.IsMachineWide && s.IsPersistable);
 
-            var existingSettings = (Settings.GetSettingValues(ConfigurationConstants.PackageSources, isPath: true) ??
-                                    Enumerable.Empty<SettingValue>()).Where(setting => !setting.IsMachineWide).ToList();
-            var minPriority = 0;
-
-            // get lowest priority in existingSetting
-            if (existingSettings.Count > 0)
-            {
-                minPriority = existingSettings.Min(setting => setting.Priority);
-            }
-
-            existingSettings.RemoveAll(setting => !sources.Any(s => string.Equals(s.Name, setting.Key, StringComparison.OrdinalIgnoreCase)));
+            var sourcesSection = Settings.Sections[ConfigurationConstants.PackageSources];
+            var existingSettings = sourcesSection?.Children.Select(c => c as SourceElement).Where(c => c != null && !c.Origin.IsMachineWide).ToList();
             var existingSettingsLookup = existingSettings.ToLookup(setting => setting.Key, StringComparer.OrdinalIgnoreCase);
-            var existingDisabledSources = Settings.GetSettingValues(ConfigurationConstants.DisabledPackageSources) ??
-                                          Enumerable.Empty<SettingValue>();
+
+            var disabledSourcesSection = Settings.Sections[ConfigurationConstants.DisabledPackageSources];
+            var existingDisabledSources = disabledSourcesSection.Children.Select(c => c as AddElement).Where(c => c != null);
             var existingDisabledSourcesLookup = existingDisabledSources.ToLookup(setting => setting.Key, StringComparer.OrdinalIgnoreCase);
 
-            var sourceSettings = new List<SettingValue>();
-            var sourcesToDisable = new List<SettingValue>();
+            var sourceSettings = new List<SourceElement>();
+            var sourcesToDisable = new List<AddElement>();
 
-            foreach (var source in sourcesToWrite)
-            {
-                var foundSettingWithSourcePriority = false;
-                var settingPriority = 0;
-                var existingSettingForSource = existingSettingsLookup[source.Name];
+            //foreach (var source in sourcesToWrite)
+            //{
+            //    var foundSettingWithSourcePriority = false;
+            //    var existingSettingForSource = existingSettingsLookup[source.Name];
 
-                // Preserve packageSource entries from low priority settings.
-                foreach (var existingSetting in existingSettingForSource)
-                {
-                    settingPriority = Math.Max(settingPriority, existingSetting.Priority);
+            //    // Preserve packageSource entries from low priority settings.
+            //    foreach (var existingSetting in existingSettingForSource)
+            //    {
+            //        // Write all settings other than the currently written one to the current NuGet.config.
+            //        if (ReadProtocolVersion(existingSetting) == source.ProtocolVersion)
+            //        {
+            //            // Update the source value of all settings with the same protocol version.
+            //            foundSettingWithSourcePriority = true;
+            //        }
+            //        sourceSettings.Add(existingSetting);
+            //    }
 
-                    // Write all settings other than the currently written one to the current NuGet.config.
-                    if (ReadProtocolVersion(existingSetting) == source.ProtocolVersion)
-                    {
-                        // Update the source value of all settings with the same protocol version.
-                        foundSettingWithSourcePriority = true;
+            //    if (!foundSettingWithSourcePriority)
+            //    {
+            //        // This is a new source, add it to the Setting with the lowest priority.
+            //        // if there is a clear tag in one config file, new source will be cleared
+            //        // we should set new source priority to lowest existingSetting priority
+            //        // NOTE: origin can be null here because it isn't ever used when saving.
+            //        var settingValue = new SourceElement(source.Name, source.Source);
 
-                        // if the existing source changed, update the setting value
-                        if (!existingSetting.Value.Equals(source.Source))
-                        {
-                            existingSetting.Value = source.Source;
-                            existingSetting.OriginalValue = source.Source;
-                        }
-                    }
-                    sourceSettings.Add(existingSetting);
-                }
+            //        if (source.ProtocolVersion != PackageSource.DefaultProtocolVersion)
+            //        {
+            //            settingValue.ProtocolVersion = source.ProtocolVersion.ToString(CultureInfo.InvariantCulture);
+            //        }
 
-                if (!foundSettingWithSourcePriority)
-                {
-                    // This is a new source, add it to the Setting with the lowest priority.
-                    // if there is a clear tag in one config file, new source will be cleared
-                    // we should set new source priority to lowest existingSetting priority
-                    // NOTE: origin can be null here because it isn't ever used when saving.
-                    var settingValue = new SettingValue(source.Name, source.Source, origin: null, isMachineWide: false, priority: minPriority);
+            //        sourceSettings.Add(settingValue);
+            //    }
 
-                    if (source.ProtocolVersion != PackageSource.DefaultProtocolVersion)
-                    {
-                        settingValue.AdditionalData[ConfigurationConstants.ProtocolVersionAttribute] =
-                            source.ProtocolVersion.ToString(CultureInfo.InvariantCulture);
-                    }
+            //    var existingDisabledSettings = existingDisabledSourcesLookup[source.Name];
+            //    // Preserve disabledPackageSource entries from low priority settings.
+            //    foreach (var setting in existingDisabledSettings)
+            //    {
+            //        sourcesToDisable.Add(setting);
+            //    }
 
-                    sourceSettings.Add(settingValue);
-                }
+            //    if (!source.IsEnabled)
+            //    {
+            //        // Add an entry to the disabledPackageSource in the file that contains
+            //        sourcesToDisable.Add(new AddElement(source.Name, "true"));
+            //    }
+            //}
 
-                // settingValue contains the setting with the highest priority.
+            //// add entries to the disabledPackageSource for machine wide setting
+            //foreach (var source in sources.Where(s => s.IsMachineWide && !s.IsEnabled))
+            //{
+            //    sourcesToDisable.Add(new AddElement(source.Name, "true", origin: null, isMachineWide: true, priority: 0));
+            //}
 
-                var existingDisabledSettings = existingDisabledSourcesLookup[source.Name];
-                // Preserve disabledPackageSource entries from low priority settings.
-                foreach (var setting in existingDisabledSettings.Where(s => s.Priority < settingPriority))
-                {
-                    sourcesToDisable.Add(setting);
-                }
+            //// add entries to the disablePackageSource for disabled package sources that are not in loaded 'sources'
+            //foreach (var setting in existingDisabledSources)
+            //{
+            //    // The following code ensures that we do not miss to mark an existing disabled source as disabled.
+            //    // However, ONLY mark an existing disable source setting as disabled, if,
+            //    // 1) it is not in the list of loaded package sources, or,
+            //    // 2) it is not already in the list of sources to disable.
+            //    if (!sources.Any(s => string.Equals(s.Name, setting.Key, StringComparison.OrdinalIgnoreCase)) &&
+            //        !sourcesToDisable.Any(s => string.Equals(s.Key, setting.Key, StringComparison.OrdinalIgnoreCase)
+            //                                && s.Priority == setting.Priority))
+            //    {
+            //        sourcesToDisable.Add(setting);
+            //    }
+            //}
 
-                if (!source.IsEnabled)
-                {
-                    // Add an entry to the disabledPackageSource in the file that contains
-                    sourcesToDisable.Add(new SettingValue(source.Name, "true", origin: null, isMachineWide: false, priority: settingPriority));
-                }
-            }
+            //// Write the updates to the nearest settings file.
+            //Settings.UpdateSections(ConfigurationConstants.PackageSources, sourceSettings);
 
-            // add entries to the disabledPackageSource for machine wide setting
-            foreach (var source in sources.Where(s => s.IsMachineWide && !s.IsEnabled))
-            {
-                sourcesToDisable.Add(new SettingValue(source.Name, "true", origin: null, isMachineWide: true, priority: 0));
-            }
+            //// overwrite new values for the <disabledPackageSources> section
+            //Settings.UpdateSections(ConfigurationConstants.DisabledPackageSources, sourcesToDisable);
 
-            // add entries to the disablePackageSource for disabled package sources that are not in loaded 'sources'
-            foreach (var setting in existingDisabledSources)
-            {
-                // The following code ensures that we do not miss to mark an existing disabled source as disabled.
-                // However, ONLY mark an existing disable source setting as disabled, if,
-                // 1) it is not in the list of loaded package sources, or,
-                // 2) it is not already in the list of sources to disable.
-                if (!sources.Any(s => string.Equals(s.Name, setting.Key, StringComparison.OrdinalIgnoreCase)) &&
-                    !sourcesToDisable.Any(s => string.Equals(s.Key, setting.Key, StringComparison.OrdinalIgnoreCase)
-                                            && s.Priority == setting.Priority))
-                {
-                    sourcesToDisable.Add(setting);
-                }
-            }
+            //// Overwrite the <packageSourceCredentials> section
+            //Settings.DeleteSection(ConfigurationConstants.CredentialsSectionName);
 
-            // Write the updates to the nearest settings file.
-            Settings.UpdateSections(ConfigurationConstants.PackageSources, sourceSettings);
+            //foreach (var source in sources.Where(s => s.Credentials != null && s.Credentials.IsValid()))
+            //{
+            //    Settings.SetNestedValues(
+            //        ConfigurationConstants.CredentialsSectionName,
+            //        source.Name,
+            //        GetCredentialValues(source.Credentials));
+            //}
 
-            // overwrite new values for the <disabledPackageSources> section
-            Settings.UpdateSections(ConfigurationConstants.DisabledPackageSources, sourcesToDisable);
+            //// Update/Add trusted sources
+            //// Deletion of a trusted source should be done separately using TrustedSourceProvider.DeleteSource()
+            //var trustedSources = sources
+            //    .Where(s => s.TrustedSource != null)
+            //    .Select(s => s.TrustedSource);
 
-            // Overwrite the <packageSourceCredentials> section
-            Settings.DeleteSection(ConfigurationConstants.CredentialsSectionName);
-
-            foreach (var source in sources.Where(s => s.Credentials != null && s.Credentials.IsValid()))
-            {
-                Settings.SetNestedValues(
-                    ConfigurationConstants.CredentialsSectionName,
-                    source.Name,
-                    GetCredentialValues(source.Credentials));
-            }
-
-            // Update/Add trusted sources
-            // Deletion of a trusted source should be done separately using TrustedSourceProvider.DeleteSource()
-            var trustedSources = sources
-                .Where(s => s.TrustedSource != null)
-                .Select(s => s.TrustedSource);
-
-            if (trustedSources.Any())
-            {
-                _trustedSourceProvider.SaveTrustedSources(trustedSources);
-            }
+            //if (trustedSources.Any())
+            //{
+            //    _trustedSourceProvider.SaveTrustedSources(trustedSources);
+            //}
 
             OnPackageSourcesChanged();
         }
@@ -501,24 +472,37 @@ namespace NuGet.Configuration
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
-            Settings.SetValue(ConfigurationConstants.DisabledPackageSources, source.Name, "true");
+            var newElement = new AddElement(source.Name, "true");
+
+            if (!Settings.Sections.ContainsKey(ConfigurationConstants.DisabledPackageSources) && !Settings.TryCreateSection(ConfigurationConstants.DisabledPackageSources))
+            {
+                throw new InvalidOperationException("could not add disabled package sources section");
+            }
+
+            var disabledPackageSourcesSection = Settings.Sections[ConfigurationConstants.DisabledPackageSources];
+
+            if (disabledPackageSourcesSection.TryAddChild(newElement))
+            {
+                throw new InvalidOperationException("could not add disabled package source");
+            }
         }
 
         public bool IsPackageSourceEnabled(PackageSource source)
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
-            var value = Settings.GetValue(ConfigurationConstants.DisabledPackageSources, source.Name);
+            var disabledSources = Settings.Sections[ConfigurationConstants.DisabledPackageSources];
+            var value = disabledSources?.GetChildElement(ConfigurationConstants.KeyAttribute, source.Name);
 
             // It doesn't matter what value it is.
             // As long as the package source name is persisted in the <disabledPackageSources> section, the source is disabled.
-            return string.IsNullOrEmpty(value);
+            return value == null;
         }
 
         /// <summary>
@@ -528,7 +512,8 @@ namespace NuGet.Configuration
         {
             get
             {
-                var activeSource = Settings.GetSettingValues(ConfigurationConstants.ActivePackageSourceSectionName).FirstOrDefault();
+                var activeSourceSection = Settings.Sections[ConfigurationConstants.ActivePackageSourceSectionName];
+                var activeSource = activeSourceSection?.Children.Select(c => c as AddElement).Where(c => c != null).FirstOrDefault();
                 if (activeSource == null)
                 {
                     return null;
@@ -546,8 +531,19 @@ namespace NuGet.Configuration
         {
             try
             {
-                Settings.DeleteSection(ConfigurationConstants.ActivePackageSourceSectionName);
-                Settings.SetValue(ConfigurationConstants.ActivePackageSourceSectionName, source.Name, source.Source);
+                var activePackageSource = new AddElement(source.Name, source.Source);
+                var activePackageSourceSection = Settings.Sections[ConfigurationConstants.ActivePackageSourceSectionName];
+
+                if (activePackageSourceSection != null)
+                {
+                    activePackageSourceSection.TryRemove();
+                }
+
+                if (Settings.TryCreateSection(ConfigurationConstants.ActivePackageSourceSectionName))
+                {
+                    activePackageSourceSection = Settings.Sections[ConfigurationConstants.ActivePackageSourceSectionName];
+                    activePackageSourceSection.TryAddChild(activePackageSource);
+                }
             }
             catch (Exception)
             {

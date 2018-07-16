@@ -143,8 +143,8 @@ namespace NuGet.Test.Utility
                 theoryAttribute.ConfigFile,
                 configFile =>
                 {
-                    var settings = new Settings(_root, configFile);
-                    var provider = new PackageSourceProvider(settings);
+                    var settingsFile = new SettingsFile(_root, configFile);
+                    var provider = new PackageSourceProvider(new Settings(settingsFile));
                     return provider.LoadPackageSources().ToArray();
                 });
         }
