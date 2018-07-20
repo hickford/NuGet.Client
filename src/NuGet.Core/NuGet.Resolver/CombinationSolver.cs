@@ -145,8 +145,6 @@ namespace NuGet.Resolver
                     }
                 }
 
-                i = consistent ? MoveForward(i, ref consistent) : MoveBackward(i, ref consistent);
-
                 if (diagnosticOutput != null && i > highest)
                 {
                     highest = i;
@@ -171,6 +169,8 @@ namespace NuGet.Resolver
                     // Impossible (no solution)
                     return null;
                 }
+
+                i = consistent ? MoveForward(i, ref consistent) : MoveBackward(i, ref consistent);
             }
         }
 
